@@ -1,0 +1,35 @@
+# Generic Dockerfile for building any Mantra repo from GitHub
+# Used by docker-compose.build.yml to clone and build repos
+
+ARG GIT_URL=https://github.com/jbflow/musical-intent-protocol.git
+ARG REPO=musical-intent-protocol
+
+FROM node:26-alpine as builder
+
+ARG GIT_URL
+ARG REPO
+
+RUN apk add --no-cache git
+
+WORKDIR /build
+RUN git clone --depth 1 ${GIT_URL} .
+
+RUN npm ci
+RUN npm run build
+
+# Final stage
+FROM node:26-alpine
+
+WORKDIR /app
+
+COPY --from=builder /build/dist ./dist
+COPY --from=builder /build/package*.json ./
+
+RUN npm ci --only=production
+
+EXPOSE 3000
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD node -e "console.log('healthy')" || exit 1
+
+CMD ["npm", "test"]

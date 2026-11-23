@@ -1,0 +1,73 @@
+version: '3.9'
+
+services:
+  protocol:
+    image: ghcr.io/jbflow/musical-intent-protocol:latest
+    container_name: mantra-protocol
+    networks:
+      - mantra-network
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "console.log('healthy')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  engine:
+    image: ghcr.io/jbflow/mantra-engine:latest
+    container_name: mantra-engine
+    networks:
+      - mantra-network
+    ports:
+      - "3001:3000"
+    depends_on:
+      protocol:
+        condition: service_healthy
+    environment:
+      - MIP_PROTOCOL_URL=http://protocol:3000
+    healthcheck:
+      test: ["CMD", "node", "-e", "console.log('healthy')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    command: ["npm", "run", "test"]
+
+  frontend:
+    image: ghcr.io/jbflow/mantra-fe:latest
+    container_name: mantra-frontend
+    networks:
+      - mantra-network
+    ports:
+      - "3002:3000"
+    depends_on:
+      engine:
+        condition: service_healthy
+    environment:
+      - NEXT_PUBLIC_API_URL=http://engine:3000
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  remote-script:
+    image: ghcr.io/jbflow/mantra-remote-script:latest
+    container_name: mantra-remote-script
+    networks:
+      - mantra-network
+    ports:
+      - "9001:9001"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s = socket.socket(); s.connect(('localhost', 9001)); s.close()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+networks:
+  mantra-network:
+    driver: bridge

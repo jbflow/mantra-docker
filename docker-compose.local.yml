@@ -1,0 +1,93 @@
+version: '3.9'
+
+services:
+  protocol:
+    build:
+      context: ../musical-intent-protocol
+      dockerfile: Dockerfile
+    container_name: mantra-protocol-dev
+    networks:
+      - mantra-network
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../musical-intent-protocol:/app
+      - /app/node_modules
+    healthcheck:
+      test: ["CMD", "node", "-e", "console.log('healthy')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  engine:
+    build:
+      context: ../mantra-engine
+      dockerfile: Dockerfile
+    container_name: mantra-engine-dev
+    networks:
+      - mantra-network
+    ports:
+      - "3001:3000"
+    volumes:
+      - ../mantra-engine:/app
+      - /app/node_modules
+    depends_on:
+      protocol:
+        condition: service_healthy
+    environment:
+      - MIP_PROTOCOL_URL=http://protocol:3000
+    healthcheck:
+      test: ["CMD", "node", "-e", "console.log('healthy')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    command: ["npm", "run", "test"]
+
+  frontend:
+    build:
+      context: ../mantra-fe
+      dockerfile: Dockerfile
+    container_name: mantra-frontend-dev
+    networks:
+      - mantra-network
+    ports:
+      - "3002:3000"
+    volumes:
+      - ../mantra-fe:/app
+      - /app/node_modules
+      - ../mantra-engine:/app/../mantra-engine
+    depends_on:
+      engine:
+        condition: service_healthy
+    environment:
+      - NEXT_PUBLIC_API_URL=http://engine:3000
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  remote-script:
+    build:
+      context: ../mantra-remote-script
+      dockerfile: Dockerfile
+    container_name: mantra-remote-script-dev
+    networks:
+      - mantra-network
+    ports:
+      - "9001:9001"
+    volumes:
+      - ../mantra-remote-script:/app
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s = socket.socket(); s.connect(('localhost', 9001)); s.close()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+networks:
+  mantra-network:
+    driver: bridge
