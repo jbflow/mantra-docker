@@ -1,5 +1,9 @@
 version: '3.9'
 
+# Local development compose: builds from ../sibling directories
+# - Source code is volume-mounted for live editing
+# - node_modules are built fresh in containers (platform-specific binaries)
+
 services:
   protocol:
     build:
@@ -13,12 +17,6 @@ services:
     volumes:
       - ../musical-intent-protocol:/app
       - /app/node_modules
-    healthcheck:
-      test: ["CMD", "node", "-e", "console.log('healthy')"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 5s
 
   engine:
     build:
@@ -33,17 +31,9 @@ services:
       - ../mantra-engine:/app
       - /app/node_modules
     depends_on:
-      protocol:
-        condition: service_healthy
+      - protocol
     environment:
       - MIP_PROTOCOL_URL=http://protocol:3000
-    healthcheck:
-      test: ["CMD", "node", "-e", "console.log('healthy')"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 5s
-    command: ["npm", "run", "test"]
 
   frontend:
     build:
@@ -57,18 +47,10 @@ services:
     volumes:
       - ../mantra-fe:/app
       - /app/node_modules
-      - ../mantra-engine:/app/../mantra-engine
     depends_on:
-      engine:
-        condition: service_healthy
+      - engine
     environment:
       - NEXT_PUBLIC_API_URL=http://engine:3000
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 5s
 
   remote-script:
     build:
@@ -81,13 +63,9 @@ services:
       - "9001:9001"
     volumes:
       - ../mantra-remote-script:/app
-    healthcheck:
-      test: ["CMD", "python", "-c", "import socket; s = socket.socket(); s.connect(('localhost', 9001)); s.close()"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 5s
 
 networks:
   mantra-network:
     driver: bridge
+
+
