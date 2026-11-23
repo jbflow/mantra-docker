@@ -73,20 +73,15 @@ test: test-protocol test-engine test-fe
 
 test-protocol:
 	@echo "Running protocol tests..."
-	docker run --rm -v $$(pwd)/../musical-intent-protocol:/app -w /app $(PROTOCOL_IMAGE):latest npm test
+	cd ../musical-intent-protocol && npm test
 
 test-engine:
 	@echo "Running engine tests..."
-	docker run --rm -v $$(pwd)/../mantra-engine:/app -w /app \
-		-v $$(pwd)/../musical-intent-protocol:/app/../musical-intent-protocol \
-		$(ENGINE_IMAGE):latest npm test
+	cd ../mantra-engine && npm test
 
 test-fe:
 	@echo "Running frontend tests..."
-	docker run --rm -v $$(pwd)/../mantra-fe:/app -w /app \
-		-v $$(pwd)/../mantra-engine:/app/../mantra-engine \
-		-v $$(pwd)/../musical-intent-protocol:/app/../musical-intent-protocol \
-		$(FE_IMAGE):latest npm test
+	cd ../mantra-fe && npm test
 
 test-fresh:
 	@echo "Testing all services from GitHub sources..."
