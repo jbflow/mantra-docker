@@ -59,6 +59,22 @@ services:
       - "9001:9001"
     volumes:
       - ../mantra-remote-script:/app
+    depends_on:
+      - liveapi-mock
+
+  liveapi-mock:
+    build:
+      context: ../LiveAPI-mock
+      dockerfile: Dockerfile
+    container_name: mantra-liveapi-mock-dev
+    networks:
+      - mantra-network
+    ports:
+      - "9999:9999"
+    volumes:
+      - ../LiveAPI-mock/live:/app/live
+      - ../LiveAPI-mock/tests:/app/tests
+    command: ["python", "-c", "from live import Song; print('✅ LiveAPI-mock service running'); import time; time.sleep(999999)"]
 
 networks:
   mantra-network:

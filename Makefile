@@ -1,4 +1,4 @@
-.PHONY: help build build-protocol build-engine build-fe build-remote dev-up dev-down test test-protocol test-engine test-fe mock-api deploy clean logs
+.PHONY: help build build-protocol build-engine build-fe build-remote dev-up dev-down test test-protocol test-engine test-fe test-liveapi mock-api deploy clean logs
 
 REGISTRY := ghcr.io/jbflow
 PROTOCOL_IMAGE := $(REGISTRY)/musical-intent-protocol
@@ -62,13 +62,14 @@ dev-up:
 	@echo "  Engine:          http://localhost:3001"
 	@echo "  Protocol:        http://localhost:3000"
 	@echo "  Remote Script:   http://localhost:9001"
+	@echo "  LiveAPI-mock:    http://localhost:9999"
 
 dev-down:
 	@echo "Stopping Mantra services..."
 	docker-compose -f docker-compose.local.yml down
 	@echo "✓ Services stopped"
 
-test: test-protocol test-engine test-fe
+test: test-protocol test-engine test-fe test-liveapi
 	@echo "✓ All tests passed"
 
 test-protocol:
@@ -82,6 +83,10 @@ test-engine:
 test-fe:
 	@echo "Running frontend tests..."
 	cd ../mantra-fe && npm test
+
+test-liveapi:
+	@echo "Running LiveAPI-mock tests..."
+	cd ../LiveAPI-mock && pytest tests/ -v
 
 test-fresh:
 	@echo "Testing all services from GitHub sources..."
