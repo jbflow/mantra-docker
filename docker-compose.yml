@@ -81,12 +81,12 @@ services:
     ports:
       - "9999:9999"
     healthcheck:
-      test: ["CMD", "python", "-c", "from live import Song; s = Song(); assert s is not None"]
+      test: ["CMD", "python", "-c", "import Live; Live.Application.get_application().get_document()"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 5s
-    command: ["python", "-c", "from live import Song; print('✅ LiveAPI-mock service running'); import time; time.sleep(999999)"]
+    command: ["python", "-c", "import Live; print('✅ LiveAPI-mock service running'); import time; time.sleep(999999)"]
 
 networks:
   mantra-network:
