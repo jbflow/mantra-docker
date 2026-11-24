@@ -61,12 +61,32 @@ services:
       - mantra-network
     ports:
       - "9001:9001"
+    depends_on:
+      liveapi-mock:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "python", "-c", "import socket; s = socket.socket(); s.connect(('localhost', 9001)); s.close()"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 5s
+
+  liveapi-mock:
+    build:
+      context: ../LiveAPI-mock
+      dockerfile: Dockerfile
+    container_name: mantra-liveapi-mock
+    networks:
+      - mantra-network
+    ports:
+      - "9999:9999"
+    healthcheck:
+      test: ["CMD", "python", "-c", "from live import Song; s = Song(); assert s is not None"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    command: ["python", "-c", "from live import Song; print('✅ LiveAPI-mock service running'); import time; time.sleep(999999)"]
 
 networks:
   mantra-network:
