@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   protocol:
     build:
@@ -47,6 +45,7 @@ services:
       - engine
     environment:
       - NEXT_PUBLIC_API_URL=http://engine:3000
+    command: ["npm", "run", "dev", "--", "--hostname", "0.0.0.0"]
 
   remote-script:
     build:

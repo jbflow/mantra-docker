@@ -54,7 +54,7 @@ build-remote:
 
 dev-up:
 	@echo "Starting Mantra services in development mode..."
-	docker-compose -f docker-compose.local.yml up -d
+	docker compose -f docker-compose.local.yml up -d
 	@echo "✓ Services started"
 	@echo ""
 	@echo "Service endpoints:"
@@ -66,7 +66,7 @@ dev-up:
 
 dev-down:
 	@echo "Stopping Mantra services..."
-	docker-compose -f docker-compose.local.yml down
+	docker compose -f docker-compose.local.yml down
 	@echo "✓ Services stopped"
 
 test: test-protocol test-engine test-fe test-liveapi
@@ -85,12 +85,12 @@ test-fe:
 	cd ../mantra-fe && npm test
 
 test-liveapi:
-	@echo "Running LiveAPI-mock tests..."
-	cd ../LiveAPI-mock && pytest tests/ -v
+	@echo "Running LiveAPI-mock tests in Docker..."
+	docker compose -f docker-compose.local.yml run --rm liveapi-mock pytest tests/ -v
 
 test-fresh:
 	@echo "Testing all services from GitHub sources..."
-	docker-compose -f docker-compose.build.yml up --abort-on-container-exit
+	docker compose -f docker-compose.build.yml up --abort-on-container-exit
 	@echo "✓ All tests passed"
 
 mock-api:
@@ -99,11 +99,11 @@ mock-api:
 
 build-fresh:
 	@echo "Building all services from GitHub sources..."
-	docker-compose -f docker-compose.build.yml build
+	docker compose -f docker-compose.build.yml build
 
 dev-up-fresh:
 	@echo "Starting services from GitHub sources..."
-	docker-compose -f docker-compose.build.yml up -d
+	docker compose -f docker-compose.build.yml up -d
 	@echo "✓ Services started"
 	@echo ""
 	@echo "Service endpoints:"
@@ -123,10 +123,10 @@ deploy:
 	@echo "✓ All images pushed to registry"
 
 logs:
-	docker-compose -f docker-compose.local.yml logs -f
+	docker compose -f docker-compose.local.yml logs -f
 
 clean:
 	@echo "Cleaning up Docker resources..."
-	docker-compose -f docker-compose.local.yml down -v
+	docker compose -f docker-compose.local.yml down -v
 	docker system prune -f
 	@echo "✓ Cleanup complete"
